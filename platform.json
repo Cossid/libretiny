@@ -1,0 +1,143 @@
+{
+  "name": "libretuya",
+  "title": "LibreTuya",
+  "description": "Free your Tuya IoT modules.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kuba2k2/platformio-libretuya"
+  },
+  "version": "0.12.6",
+  "frameworks": {
+    "arduino": {
+      "title": "Generic Arduino framework",
+      "script": "builder/frameworks/arduino.py"
+    },
+    "realtek-ambz-sdk": {
+      "tilte": "Realtek AmebaZ - SDK",
+      "package": "framework-realtek-amb1",
+      "script": "builder/frameworks/realtek-ambz-sdk.py"
+    },
+    "realtek-ambz-arduino": {
+      "tilte": "Realtek AmebaZ - Arduino",
+      "package": "framework-realtek-amb1",
+      "script": "builder/frameworks/realtek-ambz-arduino.py"
+    },
+    "realtek-ambz2-sdk": {
+      "tilte": "Realtek AmebaZ2 - SDK",
+      "package": "framework-realtek-ambz2",
+      "script": "builder/frameworks/realtek-ambz2-sdk.py"
+    },
+    "beken-72xx-sdk": {
+      "title": "Beken 72XX - SDK",
+      "package": "framework-beken-bdk",
+      "script": "builder/frameworks/beken-72xx-sdk.py"
+    },
+    "beken-72xx-arduino": {
+      "title": "Beken 72XX - Arduino",
+      "package": "framework-beken-bdk",
+      "script": "builder/frameworks/beken-72xx-arduino.py"
+    }
+  },
+  "packages": {
+    "framework-realtek-amb1": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/libretuya/framework-realtek-amb1#v2022.06.21",
+      "toolchains": {
+        "x86_64": "gccarmnoneeabi@~1.50201.0",
+        "arm": "gccarmnoneeabi@~1.50401.211104",
+        "arm64": "gccarmnoneeabi@~1.50401.210715"
+      },
+      "libraries": {
+        "lwip": [
+          "v2.1.3-amb1"
+        ]
+      }
+    },
+    "framework-realtek-ambz2": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/libretuya/framework-realtek-ambz2#v2022.11.17",
+      "toolchains": {
+        "x86_64": "gccarmnoneeabi@~1.100301.0",
+        "arm": "gccarmnoneeabi@~1.100301.0",
+        "arm64": "gccarmnoneeabi@~1.100301.0"
+      }
+    },
+    "framework-beken-bdk": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/libretuya/framework-beken-bdk#v2021.06.07",
+      "toolchains": {
+        "x86_64":"gccarmnoneeabi@~1.40804.0",
+        "arm": "gccarmnoneeabi@~1.40803.0",
+        "arm64": "gccarmnoneeabi@~1.40803.0"
+      },
+      "libraries": {
+        "lwip": [
+          "v2.1.3-bdk"
+        ]
+      }
+    },
+    "framework-arduino-api": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/libretuya/ArduinoCore-API#3a4cbfc",
+      "manifest": {
+        "description": "Hardware independent layer of the Arduino cores"
+      },
+      "libraries": {
+        "flashdb": [
+          "03500fa"
+        ],
+        "printf": [
+          "v6.0.0"
+        ]
+      }
+    },
+    "library-lwip": {
+      "type": "framework",
+      "optional": true,
+      "base_url": "https://github.com/libretuya/lwip",
+      "manifest": {
+        "description": "lwIP - A Lightweight TCPIP stack"
+      }
+    },
+    "library-flashdb": {
+      "type": "framework",
+      "optional": true,
+      "base_url": "https://github.com/armink/FlashDB",
+      "manifest": {
+        "description": "An ultra-lightweight database that supports key-value and time series data"
+      }
+    },
+    "library-printf": {
+      "type": "framework",
+      "optional": true,
+      "base_url": "https://github.com/eyalroz/printf",
+      "manifest": {
+        "description": "Tiny, fast(ish), self-contained and fully loaded printf, sprinf etc. implementation, mainly for embedded systems."
+      }
+    },
+    "toolchain-gccarmnoneeabi": {
+      "type": "toolchain",
+      "optionalVersions": [
+        "~1.40804.0",
+        "~1.50401.0",
+        "~1.90301.0",
+        "~1.100301.0"
+      ]
+    },
+    "tool-ltchiptool": {
+      "type": "uploader",
+      "version": "https://github.com/libretuya/ltchiptool#v2.0.2",
+      "note": "This is used only for C/C++ code from ltchiptool."
+    },
+    "tool-openocd": {
+      "type": "uploader",
+      "optional": true,
+      "owner": "platformio",
+      "version": "~2.1100.0"
+    }
+  }
+}
