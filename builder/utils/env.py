@@ -13,7 +13,7 @@ from SCons.Script import DefaultEnvironment, Environment
 env: Environment = DefaultEnvironment()
 
 
-def read_version(platform_dir: str, version: str):
+def env_read_version(env: Environment, platform_dir: str, version: str):
     if not isdir(join(platform_dir, ".git")):
         sys.stderr.write("Warning! Non-Git installations are NOT SUPPORTED.\n")
         return version
@@ -57,7 +57,7 @@ def env_configure(env: Environment, platform: PlatformBase, board: PlatformBoard
     # Get Family object for this board
     family = Family.get(short_name=board.get("build.family"))
     # Default environment variables
-    vars = dict(
+    env.Replace(
         SDK_DIR=platform.get_package_dir(board.get("package")),
         LT_DIR=platform.get_dir(),
         CORES_DIR=join("${LT_DIR}", "cores"),
@@ -82,23 +82,9 @@ def env_configure(env: Environment, platform: PlatformBase, board: PlatformBoard
         FAMILY_OBJ=family,
         EXTERNAL_LIBS=external_libs,
     )
-    env.Replace(**vars)
     # Store family parameters as environment variables
     env.Replace(**dict(family))
-    # Default build options
-    env.Prepend(
-        CPPDEFINES=[
-            ("LIBRETUYA", 1),
-            ("LT_VERSION", read_version(platform.get_dir(), platform.version)),
-            ("LT_BOARD", "${VARIANT}"),
-            ("F_CPU", board.get("build.f_cpu")),
-            ("MCU", "${MCU}"),
-            ("FAMILY", "F_${FAMILY}"),
-        ],
-        LINKFLAGS=[
-            '"-Wl,-Map=' + join("$BUILD_DIR", "${PROGNAME}.map") + '"',
-        ],
-    )
 
 
 env.AddMethod(env_configure, "ConfigureEnvironment")
+env.AddMethod(env_read_version, "ReadLTVersion")

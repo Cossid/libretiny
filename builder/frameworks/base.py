@@ -61,8 +61,19 @@ env.AddExternalLibrary("ltchiptool")  # uf2ota source code
 env.AddExternalLibrary("flashdb")
 env.AddExternalLibrary("printf")
 
-# Linker options
+# Flags & linker options
 env.Append(
+    CPPDEFINES=[
+        ("LIBRETUYA", 1),
+        ("LT_VERSION", env.ReadLTVersion(platform.get_dir(), platform.version)),
+        ("LT_BOARD", "${VARIANT}"),
+        ("F_CPU", board.get("build.f_cpu")),
+        ("MCU", "${MCU}"),
+        ("FAMILY", "F_${FAMILY}"),
+    ],
+    LINKFLAGS=[
+        '"-Wl,-Map=' + join("$BUILD_DIR", "${PROGNAME}.map") + '"',
+    ],
     LIBS=[
         "stdc++",
         "supc++",
