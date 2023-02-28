@@ -12,14 +12,45 @@ from SCons.Script import DefaultEnvironment, Environment
 env: Environment = DefaultEnvironment()
 board: PlatformBoardConfig = env.BoardConfig()
 platform: PlatformBase = env.PioPlatform()
+family: Family = env["FAMILY_OBJ"]
 
-# Environment variables, include paths, etc.
-family: Family = env.ConfigureEnvironment(platform, board)
-# Flash layout defines
-env.AddFlashLayout(board)
+# Include SDK builder scripts
+# No environment options that follow later will be considered
+found = False
+for f in family.inheritance:
+    try:
+        env.SConscript(f"../family/{f.name}.py", must_exist=True)
+        found = True
+    except UserError:
+        pass
+# Fail if no SDK builder was found
+if not found:
+    click.secho(
+        f"Platform '{family.name}' is currently not supported - "
+        "no SDK builder script could be found.",
+        fg="red",
+    )
+    exit(1)
+
+# Build a safe environment for this script
+queue = env.AddLibraryQueue("base", prepend_includes=True)
+# Add sources & include paths for each core
+env.AddCoreSources(queue, name="common", path=join("$COMMON_DIR", "base"))
+for f in family.inheritance:
+    env.AddCoreSources(queue, name=f.code, path=join("$CORES_DIR", f.name, "base"))
+    if f.short_name:
+        env.Prepend(CPPDEFINES=[(f"LT_{f.short_name}", "1")])
+    if f.code:
+        env.Prepend(CPPDEFINES=[(f"LT_{f.code.upper()}", "1")])
+    env.Prepend(LIBPATH=[join("$CORES_DIR", f.name, "misc")])
+
+# Sources - external libraries
+queue.AddExternalLibrary("ltchiptool")  # uf2ota source code
+queue.AddExternalLibrary("flashdb")
+queue.AddExternalLibrary("printf")
 
 # Flags & linker options
-env.Append(
+queue.AppendPublic(
     CFLAGS=[
         "-Werror=implicit-function-declaration",
     ],
@@ -43,46 +74,5 @@ env.Append(
     ],
 )
 
-# Build a core list to add sources, flags, etc.
-cores = {
-    "common": "$COMMON_DIR",
-}
-# Configure each family first (add CPP defines)
-for f in family.inheritance:
-    cores[f.code] = env.AddFamily(f)
-
-# Add fixups & config for each core
-for name, path in cores.items():
-    env.AddCoreConfig(path=join(path, "base"))
-    if "ARDUINO" in env:
-        env.AddCoreConfig(path=join(path, "arduino", "src"))
-
-# Include SDK builder scripts
-# The script will call BuildLibraries(safe=True) to secure the include paths
-found = False
-for f in family.inheritance:
-    try:
-        env.SConscript(f"../family/{f.name}.py", must_exist=True)
-        found = True
-    except UserError:
-        pass
-# Fail if no SDK builder was found
-if not found:
-    click.secho(
-        f"Platform '{family.name}' is currently not supported - "
-        "no SDK builder script could be found.",
-        fg="red",
-    )
-    exit(1)
-
-# Add sources & include paths for each core
-for name, path in cores.items():
-    env.AddCoreSources(name=name, path=join(path, "base"))
-
-# Sources - external libraries
-env.AddExternalLibrary("ltchiptool")  # uf2ota source code
-env.AddExternalLibrary("flashdb")
-env.AddExternalLibrary("printf")
-
 # Build everything from the base core
-env.BuildLibraries()
+queue.BuildLibraries()
