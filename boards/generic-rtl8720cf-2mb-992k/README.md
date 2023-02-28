@@ -42,6 +42,31 @@ libretuya:
     version: dev
 ```
 
+## Arduino Core pin mapping
+
+No. | Pin  | UART      | I²C      | SPI       | PWM  | Other
+----|------|-----------|----------|-----------|------|-----------
+D0  | PA00 | UART1_RX  |          |           | PWM0 | SWCLK, TCK
+D1  | PA01 | UART1_TX  |          |           | PWM1 | SWDIO, TMS
+D2  | PA02 | UART1_RX  | I2C0_SCL | SPI0_CS   | PWM2 | TDO
+D3  | PA03 | UART1_TX  | I2C0_SDA | SPI0_SCK  | PWM3 | TDI
+D4  | PA04 | UART1_CTS |          | SPI0_MOSI | PWM4 | tRST
+D5  | PA07 |           |          | SPI0_CS   |      |
+D6  | PA08 |           |          | SPI0_SCK  |      |
+D7  | PA09 | UART0_RTS |          | SPI0_MOSI |      |
+D8  | PA10 | UART0_CTS |          | SPI0_MISO |      |
+D9  | PA11 | UART0_TX  | I2C0_SCL |           | PWM0 |
+D10 | PA12 | UART0_RX  | I2C0_SDA |           | PWM1 |
+D11 | PA13 | UART0_RX  |          |           | PWM7 |
+D12 | PA14 | UART0_TX  |          |           | PWM2 |
+D13 | PA15 | UART2_RX  | I2C0_SCL | SPI0_CS   | PWM3 |
+D14 | PA16 | UART2_TX  | I2C0_SDA | SPI0_SCK  | PWM4 |
+D15 | PA17 |           |          |           | PWM5 |
+D16 | PA18 |           |          |           | PWM6 |
+D17 | PA19 | UART2_CTS | I2C0_SCL | SPI0_MOSI | PWM7 |
+D18 | PA20 | UART2_RTS | I2C0_SDA | SPI0_MISO | PWM0 |
+D19 | PA23 |           |          |           | PWM7 |
+
 ## Flash memory map
 
 Flash size: 2 MiB / 2,097,152 B / 0x200000

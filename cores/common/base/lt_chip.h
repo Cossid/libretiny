@@ -14,9 +14,7 @@ typedef enum {
 	F_BK7231U  = 0x675A40B0, // Beken 7231U/7231T
 	F_BK7231N  = 0x7B3EF230, // Beken 7231N
 	F_BK7251   = 0x6A82CC42, // Beken 7251/7252
-	F_BL602	   = 0xDE1270B7, // Boufallo 602
-	F_XR809	   = 0x51E903A8, // Xradiotech 809
-	F_NATIVE   = 0xDEADBEEF, // Host-native
+	F_BL60X	   = 0xDE1270B7, // Boufallo 602
 } ChipFamily;
 
 typedef enum {

@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <WVariant.h>
-
 // clang-format off
 
 // Pins
@@ -38,27 +36,33 @@
 
 // Pin function macros
 // -------------------
-#define PIN_FUNCTION_ADC3 3u  // GPIO23
-#define PIN_FUNCTION_P0   8u  // GPIO0
-#define PIN_FUNCTION_P1   9u  // GPIO1
-#define PIN_FUNCTION_P6   0u  // GPIO6
-#define PIN_FUNCTION_P7   1u  // GPIO7
-#define PIN_FUNCTION_P8   2u  // GPIO8
-#define PIN_FUNCTION_P10  4u  // GPIO10
-#define PIN_FUNCTION_P11  5u  // GPIO11
-#define PIN_FUNCTION_P21  10u // GPIO21
-#define PIN_FUNCTION_P23  3u  // GPIO23
-#define PIN_FUNCTION_P24  6u  // GPIO24
-#define PIN_FUNCTION_P26  7u  // GPIO26
-#define PIN_FUNCTION_PWM0 0u  // GPIO6
-#define PIN_FUNCTION_PWM1 1u  // GPIO7
-#define PIN_FUNCTION_PWM2 2u  // GPIO8
-#define PIN_FUNCTION_PWM4 6u  // GPIO24
-#define PIN_FUNCTION_PWM5 7u  // GPIO26
-#define PIN_FUNCTION_RX1  4u  // GPIO10
-#define PIN_FUNCTION_RX2  9u  // GPIO1
-#define PIN_FUNCTION_SCL2 8u  // GPIO0
-#define PIN_FUNCTION_SDA1 10u // GPIO21
-#define PIN_FUNCTION_SDA2 9u  // GPIO1
-#define PIN_FUNCTION_TX1  5u  // GPIO11
-#define PIN_FUNCTION_TX2  8u  // GPIO0
+#define PIN_ADC3 3u  // GPIO23
+#define PIN_P0   8u  // GPIO0
+#define PIN_P1   9u  // GPIO1
+#define PIN_P6   0u  // GPIO6
+#define PIN_P7   1u  // GPIO7
+#define PIN_P8   2u  // GPIO8
+#define PIN_P10  4u  // GPIO10
+#define PIN_P11  5u  // GPIO11
+#define PIN_P21  10u // GPIO21
+#define PIN_P23  3u  // GPIO23
+#define PIN_P24  6u  // GPIO24
+#define PIN_P26  7u  // GPIO26
+#define PIN_PWM0 0u  // GPIO6
+#define PIN_PWM1 1u  // GPIO7
+#define PIN_PWM2 2u  // GPIO8
+#define PIN_PWM4 6u  // GPIO24
+#define PIN_PWM5 7u  // GPIO26
+#define PIN_RX1  4u  // GPIO10
+#define PIN_RX2  9u  // GPIO1
+#define PIN_SCL2 8u  // GPIO0
+#define PIN_SDA1 10u // GPIO21
+#define PIN_SDA2 9u  // GPIO1
+#define PIN_TX1  5u  // GPIO11
+#define PIN_TX2  8u  // GPIO0
+
+// Port availability
+// -----------------
+#define HAS_SERIAL1 1
+#define HAS_SERIAL2 1
+#define HAS_WIRE2   1

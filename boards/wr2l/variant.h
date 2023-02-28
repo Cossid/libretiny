@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <WVariant.h>
-
 // clang-format off
 
 // Pins
@@ -32,17 +30,17 @@
 
 // Pin function macros
 // -------------------
-#define PIN_FUNCTION_ADC1 3u // PA_19
-#define PIN_FUNCTION_CS0  3u // PA_19
-#define PIN_FUNCTION_CS1  3u // PA_19
-#define PIN_FUNCTION_CTS0 3u // PA_19
-#define PIN_FUNCTION_PA05 2u // PA_5
-#define PIN_FUNCTION_PA12 4u // PA_12
-#define PIN_FUNCTION_PA14 1u // PA_14
-#define PIN_FUNCTION_PA15 0u // PA_15
-#define PIN_FUNCTION_PA19 3u // PA_19
-#define PIN_FUNCTION_PWM0 1u // PA_14
-#define PIN_FUNCTION_PWM1 0u // PA_15
-#define PIN_FUNCTION_PWM3 4u // PA_12
-#define PIN_FUNCTION_PWM4 2u // PA_5
-#define PIN_FUNCTION_SDA0 3u // PA_19
+#define PIN_ADC1 3u // PA_19
+#define PIN_CS0  3u // PA_19
+#define PIN_CS1  3u // PA_19
+#define PIN_CTS0 3u // PA_19
+#define PIN_PA05 2u // PA_5
+#define PIN_PA12 4u // PA_12
+#define PIN_PA14 1u // PA_14
+#define PIN_PA15 0u // PA_15
+#define PIN_PA19 3u // PA_19
+#define PIN_PWM0 1u // PA_14
+#define PIN_PWM1 0u // PA_15
+#define PIN_PWM3 4u // PA_12
+#define PIN_PWM4 2u // PA_5
+#define PIN_SDA0 3u // PA_19

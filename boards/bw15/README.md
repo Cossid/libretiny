@@ -48,6 +48,24 @@ libretuya:
 
 ![Pinout](pinout_bw15.svg)
 
+## Arduino Core pin mapping
+
+No. | Pin  | UART      | I²C      | SPI       | PWM  | Other
+----|------|-----------|----------|-----------|------|-----------
+D0  | PA17 |           |          |           | PWM5 |
+D1  | PA18 |           |          |           | PWM6 |
+D2  | PA02 | UART1_RX  | I2C0_SCL | SPI0_CS   | PWM2 | TDO
+D3  | PA15 | UART2_RX  | I2C0_SCL | SPI0_CS   | PWM3 |
+D4  | PA04 | UART1_CTS |          | SPI0_MOSI | PWM4 | tRST
+D5  | PA19 | UART2_CTS | I2C0_SCL | SPI0_MOSI | PWM7 |
+D6  | PA20 | UART2_RTS | I2C0_SDA | SPI0_MISO | PWM0 |
+D7  | PA16 | UART2_TX  | I2C0_SDA | SPI0_SCK  | PWM4 |
+D8  | PA00 | UART1_RX  |          |           | PWM0 | SWCLK, TCK
+D9  | PA03 | UART1_TX  | I2C0_SDA | SPI0_SCK  | PWM3 | TDI
+D10 | PA01 | UART1_TX  |          |           | PWM1 | SWDIO, TMS
+D11 | PA13 | UART0_RX  |          |           | PWM7 |
+D12 | PA14 | UART0_TX  |          |           | PWM2 |
+
 ## Flash memory map
 
 Flash size: 2 MiB / 2,097,152 B / 0x200000

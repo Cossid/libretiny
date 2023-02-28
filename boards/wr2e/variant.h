@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <WVariant.h>
-
 // clang-format off
 
 // Pins
@@ -39,24 +37,29 @@
 
 // Pin function macros
 // -------------------
-#define PIN_FUNCTION_ADC1  1u // PA_19
-#define PIN_FUNCTION_ADC2  7u // AD_2
-#define PIN_FUNCTION_CS0   1u // PA_19
-#define PIN_FUNCTION_CS1   1u // PA_19
-#define PIN_FUNCTION_CTS0  1u // PA_19
-#define PIN_FUNCTION_MOSI0 4u // PA_23
-#define PIN_FUNCTION_MOSI1 4u // PA_23
-#define PIN_FUNCTION_PA05  2u // PA_5
-#define PIN_FUNCTION_PA12  0u // PA_12
-#define PIN_FUNCTION_PA14  5u // PA_14
-#define PIN_FUNCTION_PA15  6u // PA_15
-#define PIN_FUNCTION_PA18  3u // PA_18
-#define PIN_FUNCTION_PA19  1u // PA_19
-#define PIN_FUNCTION_PA23  4u // PA_23
-#define PIN_FUNCTION_RX0   3u // PA_18
-#define PIN_FUNCTION_SCK0  3u // PA_18
-#define PIN_FUNCTION_SCK1  3u // PA_18
-#define PIN_FUNCTION_SCL1  3u // PA_18
-#define PIN_FUNCTION_SDA0  1u // PA_19
-#define PIN_FUNCTION_SDA1  4u // PA_23
-#define PIN_FUNCTION_TX0   4u // PA_23
+#define PIN_ADC1  1u // PA_19
+#define PIN_ADC2  7u // AD_2
+#define PIN_CS0   1u // PA_19
+#define PIN_CS1   1u // PA_19
+#define PIN_CTS0  1u // PA_19
+#define PIN_MOSI0 4u // PA_23
+#define PIN_MOSI1 4u // PA_23
+#define PIN_PA05  2u // PA_5
+#define PIN_PA12  0u // PA_12
+#define PIN_PA14  5u // PA_14
+#define PIN_PA15  6u // PA_15
+#define PIN_PA18  3u // PA_18
+#define PIN_PA19  1u // PA_19
+#define PIN_PA23  4u // PA_23
+#define PIN_RX0   3u // PA_18
+#define PIN_SCK0  3u // PA_18
+#define PIN_SCK1  3u // PA_18
+#define PIN_SCL1  3u // PA_18
+#define PIN_SDA0  1u // PA_19
+#define PIN_SDA1  4u // PA_23
+#define PIN_TX0   4u // PA_23
+
+// Port availability
+// -----------------
+#define HAS_SERIAL0 1
+#define HAS_WIRE1   1

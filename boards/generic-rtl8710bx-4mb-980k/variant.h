@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include <WVariant.h>
-
 // clang-format off
 
 // Pins
@@ -52,41 +50,50 @@
 
 // Pin function macros
 // -------------------
-#define PIN_FUNCTION_ADC1  12u // PA_19
-#define PIN_FUNCTION_CS0   12u // PA_19
-#define PIN_FUNCTION_CS1   12u // PA_19
-#define PIN_FUNCTION_CTS0  12u // PA_19
-#define PIN_FUNCTION_FCS   2u  // PA_6
-#define PIN_FUNCTION_FD0   5u  // PA_9
-#define PIN_FUNCTION_FD1   3u  // PA_7
-#define PIN_FUNCTION_FD2   4u  // PA_8
-#define PIN_FUNCTION_FD3   7u  // PA_11
-#define PIN_FUNCTION_FSCK  6u  // PA_10
-#define PIN_FUNCTION_MISO0 13u // PA_22
-#define PIN_FUNCTION_MISO1 13u // PA_22
-#define PIN_FUNCTION_MOSI0 14u // PA_23
-#define PIN_FUNCTION_MOSI1 14u // PA_23
-#define PIN_FUNCTION_PA00  0u  // PA_0
-#define PIN_FUNCTION_PA05  1u  // PA_5
-#define PIN_FUNCTION_PA06  2u  // PA_6
-#define PIN_FUNCTION_PA07  3u  // PA_7
-#define PIN_FUNCTION_PA08  4u  // PA_8
-#define PIN_FUNCTION_PA09  5u  // PA_9
-#define PIN_FUNCTION_PA10  6u  // PA_10
-#define PIN_FUNCTION_PA11  7u  // PA_11
-#define PIN_FUNCTION_PA12  8u  // PA_12
-#define PIN_FUNCTION_PA14  9u  // PA_14
-#define PIN_FUNCTION_PA15  10u // PA_15
-#define PIN_FUNCTION_PA18  11u // PA_18
-#define PIN_FUNCTION_PA19  12u // PA_19
-#define PIN_FUNCTION_PA22  13u // PA_22
-#define PIN_FUNCTION_PA23  14u // PA_23
-#define PIN_FUNCTION_PA29  15u // PA_29
-#define PIN_FUNCTION_PA30  16u // PA_30
-#define PIN_FUNCTION_RTS0  13u // PA_22
-#define PIN_FUNCTION_RX0   11u // PA_18
-#define PIN_FUNCTION_RX2   15u // PA_29
-#define PIN_FUNCTION_SCK0  11u // PA_18
-#define PIN_FUNCTION_SCK1  11u // PA_18
-#define PIN_FUNCTION_TX0   14u // PA_23
-#define PIN_FUNCTION_TX2   16u // PA_30
+#define PIN_ADC1  12u // PA_19
+#define PIN_CS0   12u // PA_19
+#define PIN_CS1   12u // PA_19
+#define PIN_CTS0  12u // PA_19
+#define PIN_FCS   2u  // PA_6
+#define PIN_FD0   5u  // PA_9
+#define PIN_FD1   3u  // PA_7
+#define PIN_FD2   4u  // PA_8
+#define PIN_FD3   7u  // PA_11
+#define PIN_FSCK  6u  // PA_10
+#define PIN_MISO0 13u // PA_22
+#define PIN_MISO1 13u // PA_22
+#define PIN_MOSI0 14u // PA_23
+#define PIN_MOSI1 14u // PA_23
+#define PIN_PA00  0u  // PA_0
+#define PIN_PA05  1u  // PA_5
+#define PIN_PA06  2u  // PA_6
+#define PIN_PA07  3u  // PA_7
+#define PIN_PA08  4u  // PA_8
+#define PIN_PA09  5u  // PA_9
+#define PIN_PA10  6u  // PA_10
+#define PIN_PA11  7u  // PA_11
+#define PIN_PA12  8u  // PA_12
+#define PIN_PA14  9u  // PA_14
+#define PIN_PA15  10u // PA_15
+#define PIN_PA18  11u // PA_18
+#define PIN_PA19  12u // PA_19
+#define PIN_PA22  13u // PA_22
+#define PIN_PA23  14u // PA_23
+#define PIN_PA29  15u // PA_29
+#define PIN_PA30  16u // PA_30
+#define PIN_RTS0  13u // PA_22
+#define PIN_RX0   11u // PA_18
+#define PIN_RX2   15u // PA_29
+#define PIN_SCK0  11u // PA_18
+#define PIN_SCK1  11u // PA_18
+#define PIN_TX0   14u // PA_23
+#define PIN_TX2   16u // PA_30
+
+// Port availability
+// -----------------
+#define HAS_SERIAL0 1
+#define HAS_SERIAL2 1
+#define HAS_SPI0    1
+#define HAS_SPI1    1
+#define HAS_WIRE0   1
+#define HAS_WIRE1   1
