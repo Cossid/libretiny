@@ -80,6 +80,7 @@ class Library:
 
 class LibraryQueue:
     env: Environment
+    name: str
     queue: List[Library]
     includes: List[str]
     options_public: dict
@@ -87,8 +88,14 @@ class LibraryQueue:
     prepend_includes: bool
     built: bool = False
 
-    def __init__(self, env: Environment, prepend_includes: bool = False) -> None:
+    def __init__(
+        self,
+        env: Environment,
+        name: str,
+        prepend_includes: bool = False,
+    ) -> None:
         self.env = env
+        self.name = name
         self.queue = []
         self.includes = []
         self.options_public = {}
@@ -137,7 +144,8 @@ class LibraryQueue:
                 )
             )
 
-        print("Library Queue")
+        print()
+        print(f"Library Queue - {self.name}")
         print("Environment paths:")
         print_list(self.env["CPPPATH"])
         print(
@@ -158,6 +166,7 @@ class LibraryQueue:
     def BuildLibraries(self):
         if self.built:
             raise RuntimeError("Cannot build a library queue twice")
+        self.Print()
 
         # add public options to the environment
         apply_options(self.env, self.options_public)
@@ -191,22 +200,11 @@ class LibraryQueue:
 
 
 def env_add_library_queue(
-    env: Environment, name: str, prepend_includes: bool = False
+    env: Environment,
+    name: str,
+    prepend_includes: bool = False,
 ) -> LibraryQueue:
-    queue = LibraryQueue(env, prepend_includes)
-    env["LIBQUEUELIST"][name] = queue
-    return queue
+    return LibraryQueue(env, name, prepend_includes)
 
 
-def env_build_all_libraries(env: Environment):
-    for name, queue in env["LIBQUEUELIST"].items():
-        print()
-        print()
-        print("QUEUE -", name)
-        queue.Print()
-        queue.BuildLibraries()
-
-
-env["LIBQUEUELIST"] = {}
 env.AddMethod(env_add_library_queue, "AddLibraryQueue")
-env.AddMethod(env_build_all_libraries, "BuildAllLibraries")

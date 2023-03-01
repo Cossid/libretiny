@@ -38,6 +38,7 @@ queue = env.AddLibraryQueue("base", prepend_includes=True)
 env.AddCoreSources(queue, name="common", path=join("$COMMON_DIR", "base"))
 for f in family.inheritance:
     env.AddCoreSources(queue, name=f.code, path=join("$CORES_DIR", f.name, "base"))
+
     if f.short_name:
         env.Prepend(CPPDEFINES=[(f"LT_{f.short_name}", "1")])
     if f.code:
@@ -61,6 +62,8 @@ queue.AppendPublic(
         ("F_CPU", board.get("build.f_cpu")),
         ("MCU", "${MCU}"),
         ("FAMILY", "F_${FAMILY}"),
+        # Add flash layout defines created in env.AddFlashLayout()
+        *env["FLASH_DEFINES"].items(),
     ],
     CPPPATH=[
         "$BOARD_DIR",

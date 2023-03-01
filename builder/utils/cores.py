@@ -32,15 +32,15 @@ def env_configure_family(env: Environment):
                 join(path, "fixups"),
             ],
         )
-        try:
-            env.LoadDefines(join(path, "lt_defs.h"))
-        except FileNotFoundError:
-            pass
 
 
 def env_add_core_sources(env: Environment, queue, name: str, path: str) -> bool:
     if not isdir(env.subst(path)):
         return False
+    try:
+        env.LoadDefines(join(path, "lt_defs.h"))
+    except FileNotFoundError:
+        pass
     queue.AddLibrary(
         name=f"core_{name}",
         base_dir=path,
