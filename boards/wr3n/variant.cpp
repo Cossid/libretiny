@@ -4,6 +4,10 @@
 
 extern "C" {
 
+#ifdef LT_VARIANT_INCLUDE
+#include LT_VARIANT_INCLUDE
+#endif
+
 // clang-format off
 PinInfo pinTable[PINS_COUNT] = {
 	// D0: PA29, UART2_RX, I2C0_SCL, PWM4
