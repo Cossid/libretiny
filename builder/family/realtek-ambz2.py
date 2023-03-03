@@ -211,7 +211,7 @@ queue.AddLibrary(
         "+<soc/realtek/8710c/misc/driver>",
         "+<soc/realtek/8710c/misc/os>",
         "+<soc/realtek/8710c/misc/platform>",
-        "+<soc/realtek/8710c/misc/utilities/include>",
+        "+<soc/realtek/8710c/misc/utilities>",
     ],
     options=dict(
         CCFLAGS=[
