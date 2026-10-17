@@ -135,6 +135,17 @@ queue.AppendPublic(
         "-Wl,-wrap,bk_flash_erase",
         "-Wl,-wrap,bk_flash_write",
         "-Wl,-wrap,bk_flash_read",
+        # second vif fixes for AP+STA (base/wraps/rw_msg_tx.c)
+        *(
+            [
+                "-Wl,-wrap,rw_msg_send_add_if",
+                "-Wl,-wrap,rwm_transfer",
+                "-Wl,-wrap,rwm_mgmt_get_netif2vif",
+                "-Wl,-wrap,rwm_mgmt_vif_mac2idx",
+            ]
+            if SOC in (SOC_BK7231, SOC_BK7231N) and BDK <= (3, 0, 33)
+            else []
+        ),
         # stdio wrappers (base/port/printf.c)
         "-Wl,-wrap,bk_printf",
     ],
