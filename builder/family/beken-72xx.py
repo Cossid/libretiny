@@ -139,6 +139,9 @@ queue.AppendPublic(
         "-Wl,-wrap,bk_printf",
     ],
 )
+if BDK >= (3, 0, 76):
+    # wpa_supplicant wrappers (base/fixups/wlan_ui.c)
+    queue.AppendPublic(LINKFLAGS=["-Wl,-wrap,wpa_config_set_wpa"])
 queue.AppendPrivate(
     CCFLAGS=[
         "-Wno-comment",

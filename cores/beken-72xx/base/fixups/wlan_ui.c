@@ -39,6 +39,26 @@ static bool bk_wlan_key_to_psk(const char *key_buffer, uint8_t psk[PMK_LEN])
     return true;
 }
 
+#if CFG_BDK_VERSION >= 30076
+static bool bk_wlan_pmf_disabled = false;
+
+extern int __real_wpa_config_set_wpa(struct wpa_bss *bss, struct wpa_ssid *ssid, struct wpa_ie_data *ie);
+
+/*
+ * The SDK forces PMF to optional on every scan result match, so an AP holding a
+ * PMF session from before a restart rejects a reconnect for several seconds.
+ * Reset it afterwards when PMF is disabled; older SDKs compile PMF out entirely.
+ */
+int __wrap_wpa_config_set_wpa(struct wpa_bss *bss, struct wpa_ssid *ssid, struct wpa_ie_data *ie)
+{
+    int ret = __real_wpa_config_set_wpa(bss, ssid, ie);
+
+    if (bk_wlan_pmf_disabled)
+        ssid->ieee80211w = NO_MGMT_FRAME_PROTECTION;
+    return ret;
+}
+#endif
+
 /*
  * Allow or forbid the supplicant from selecting SAE (WPA3) by toggling the
  * driver's SAE flag. Must be called after the supplicant is enabled, as that
@@ -170,15 +190,8 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     bk_wlan_set_sae_allowed(!is_psk);
 
 #if CFG_BDK_VERSION >= 30076
-    /*
-     * Older SDKs compile out PMF, while this one negotiates it, so an AP holding a
-     * PMF session from before a restart rejects the new association for several
-     * seconds. Turn PMF off for PSK, which doesn't need it; WPA3 keeps the default.
-     */
-    memset(&config, 0, sizeof(config));
-    config.u.ieee80211w = is_psk ? 0 : MGMT_FRAME_PROTECTION_DEFAULT;
-    config.field = WLAN_STA_FIELD_MFP;
-    wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
+    /* Turn PMF off for PSK (see `__wrap_wpa_config_set_wpa()`); WPA3 keeps it. */
+    bk_wlan_pmf_disabled = is_psk;
 #endif
 
     /* set fast connect bssid */
