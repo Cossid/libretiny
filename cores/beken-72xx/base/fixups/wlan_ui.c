@@ -23,6 +23,18 @@ static void bk_wlan_copy_key(char key_buffer[PMK_LEN_MAX + 1])
     key_buffer[key_len] = 0;
 }
 
+/* Whether the key is a 64-character hex PSK rather than a passphrase. */
+static bool bk_wlan_key_is_psk(const char *key_buffer)
+{
+    if (strlen(key_buffer) != PMK_LEN * 2)
+        return false;
+    for (int i = 0; i < PMK_LEN * 2; i++) {
+        if (!isxdigit((unsigned char)key_buffer[i]))
+            return false;
+    }
+    return true;
+}
+
 /*
  * Request the PSK for the station. A hex PSK is available immediately and is
  * delivered to the supplicant synchronously, so the network must already be
@@ -101,6 +113,18 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     /* set network parameters: ssid, passphase */
     wlan_sta_set((uint8_t*)inNetworkInitParaAdv->ap_info.ssid, strlen(inNetworkInitParaAdv->ap_info.ssid),
                  (uint8_t*)key_buffer);
+
+    /*
+     * `wlan_sta_set()` allows SAE by default, which derives its key from the
+     * passphrase. A PSK cannot be used for that, so on a WPA2/WPA3 network SAE
+     * would be chosen and fail authentication. Restrict to WPA2-PSK instead.
+     */
+    if (bk_wlan_key_is_psk(key_buffer)) {
+        memset(&config, 0, sizeof(config));
+        config.u.key_mgmt = WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256;
+        config.field = WLAN_STA_FIELD_KEY_MGMT;
+        wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
+    }
 
     /* the network is configured now, so the PSK can be applied to it */
     bk_wlan_request_psk(key_buffer);
