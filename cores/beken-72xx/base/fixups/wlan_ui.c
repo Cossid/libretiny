@@ -3,6 +3,7 @@
 #include "rw_pub.h"
 #include "param_config.h"
 #include "wpa_psk_cache.h"
+#include <libretiny.h>
 
 extern void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAdv);
 
@@ -214,6 +215,21 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 
     /* connect to AP */
     wlan_sta_connect(g_sta_param_ptr->fast_connect_set ? g_sta_param_ptr->fast_connect.chann : 0);
+
+    /* TEMPORARY DIAGNOSTIC: PMF state before and after the connect attempt. */
+    {
+        extern struct wpa_supplicant *wpa_suppliant_ctrl_get_wpas(void);
+        struct wpa_supplicant *wpa_s = wpa_suppliant_ctrl_get_wpas();
+        struct wpa_ssid *s = wpa_s ? wpa_config_get_network(wpa_s->conf, 0) : NULL;
+
+        if (s) {
+            LT_I("PMFDBG: is_psk=%d w=%d pmf=%d km=0x%x", is_psk, s->ieee80211w,
+                 wpas_get_ssid_pmf(wpa_s, s), s->key_mgmt);
+            rtos_delay_milliseconds(1500);
+            LT_I("PMFDBG: after: w=%d pmf=%d sel_km=0x%x ssid_km=0x%x", s->ieee80211w,
+                 wpas_get_ssid_pmf(wpa_s, s), wpa_s->key_mgmt, s->key_mgmt);
+        }
+    }
 
 #endif
     ip_address_set(BK_STATION, inNetworkInitParaAdv->dhcp_mode,
