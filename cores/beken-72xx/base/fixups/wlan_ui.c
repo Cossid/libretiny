@@ -130,14 +130,16 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
                  (uint8_t*)key_buffer);
 
     /*
-     * `wlan_sta_set()` allows SAE by default, which derives its key from the
-     * passphrase. A PSK cannot be used for that, so on a WPA2/WPA3 network SAE
-     * would be chosen and fail authentication. Restrict to WPA2-PSK instead.
+     * The SDK re-enables SAE in the network's key management every time it
+     * matches a scan result, so that cannot be restricted here. SAE derives its
+     * key from the passphrase, which a PSK cannot provide, so on a WPA2/WPA3
+     * network it would be chosen and fail. SAE requires PMF, so disable PMF
+     * to leave WPA2-PSK as the only option.
      */
     if (is_psk) {
         memset(&config, 0, sizeof(config));
-        config.u.key_mgmt = WPA_KEY_MGMT_PSK;
-        config.field = WLAN_STA_FIELD_KEY_MGMT;
+        config.u.ieee80211w = 0;
+        config.field = WLAN_STA_FIELD_MFP;
         wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
     }
 
