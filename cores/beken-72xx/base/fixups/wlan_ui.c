@@ -39,16 +39,29 @@ static bool bk_wlan_key_to_psk(const char *key_buffer, uint8_t psk[PMK_LEN])
     return true;
 }
 
-/*
- * Request the PSK for the station. A known PSK is available immediately and is
- * delivered to the supplicant synchronously, so the network must already be
- * configured when this is called; otherwise the PSK is dropped.
- */
-static void bk_wlan_request_psk(const char *key_buffer, uint8_t *psk, size_t psk_len)
+/* let wpa_psk_cal thread to calculate the PSK from the passphrase */
+static void bk_wlan_request_psk(const char *key_buffer)
 {
-    /* without a PSK, let wpa_psk_cal thread to calculate it */
     wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
-                    (char *)key_buffer, psk, psk_len);
+                    (char *)key_buffer, NULL, 0);
+}
+
+/*
+ * Apply a known PSK to the configured network. This is done directly instead of
+ * through `wpa_psk_request()`, which caches the last PSK and does nothing when
+ * asked for the same one again, leaving a recreated network without a PSK. The
+ * network must already be configured, as the PSK is matched against it.
+ */
+static void bk_wlan_apply_psk(const char *passphrase, const uint8_t psk[PMK_LEN])
+{
+    wlan_gen_psk_param_t param;
+
+    memset(&param, 0, sizeof(param));
+    memcpy(param.ssid, g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length);
+    param.ssid_len = g_sta_param_ptr->ssid.length;
+    strlcpy(param.passphrase, passphrase, sizeof(param.passphrase));
+    memcpy(param.psk, psk, PMK_LEN);
+    wlan_sta_gen_psk(&param);
 }
 
 OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
@@ -86,7 +99,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     {
         char key_buffer[PMK_LEN_MAX + 1];
         bk_wlan_copy_key(key_buffer);
-        bk_wlan_request_psk(key_buffer, NULL, 0);
+        bk_wlan_request_psk(key_buffer);
     }
 
     supplicant_main_entry(inNetworkInitParaAdv->ap_info.ssid);
@@ -144,7 +157,10 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     }
 
     /* the network is configured now, so the PSK can be applied to it */
-    bk_wlan_request_psk(key_buffer, is_psk ? psk : NULL, is_psk ? PMK_LEN : 0);
+    if (is_psk)
+        bk_wlan_apply_psk(key_buffer, psk);
+    else
+        bk_wlan_request_psk(key_buffer);
 
     /* TEMPORARY DIAGNOSTIC: dump what the supplicant actually holds. */
     {
