@@ -102,6 +102,7 @@ void wifiEventHandler(rw_evt_type event) {
 		case RW_EVT_STA_NO_AP_FOUND:
 		case RW_EVT_STA_ASSOC_FULL:
 #if CFG_BDK_VERSION >= 30076
+		case RW_EVT_STA_DEAUTH:
 		case RW_EVT_STA_AUTH_FAILED:
 		case RW_EVT_STA_DISASSOC:
 		case RW_EVT_STA_ASSOC_FAILED:
@@ -110,7 +111,15 @@ void wifiEventHandler(rw_evt_type event) {
 		case RW_EVT_STA_CONNECT_FAILED:
 #endif
 			eventId									 = ARDUINO_EVENT_WIFI_STA_DISCONNECTED;
-			eventInfo.wifi_sta_disconnected.ssid_len = 0;
+			// BDK doesn't report which AP failed; use the configured target, so that
+			// listeners don't mistake the event for a spurious one (empty SSID).
+			eventInfo.wifi_sta_disconnected.ssid_len = strnlen(STA_ADV_CFG.ap_info.ssid, sizeof(eventInfo.wifi_sta_disconnected.ssid));
+			memcpy(
+				eventInfo.wifi_sta_disconnected.ssid,
+				STA_ADV_CFG.ap_info.ssid,
+				eventInfo.wifi_sta_disconnected.ssid_len
+			);
+			memcpy(eventInfo.wifi_sta_disconnected.bssid, STA_ADV_CFG.ap_info.bssid, 6);
 			switch (event) {
 				case RW_EVT_STA_BEACON_LOSE:
 					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_BEACON_TIMEOUT;
@@ -128,6 +137,9 @@ void wifiEventHandler(rw_evt_type event) {
 					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_ASSOC_TOOMANY;
 					break;
 #if CFG_BDK_VERSION >= 30076
+				case RW_EVT_STA_DEAUTH:
+					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_AUTH_LEAVE;
+					break;
 				case RW_EVT_STA_DISASSOC:
 					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_ASSOC_LEAVE;
 					break;
