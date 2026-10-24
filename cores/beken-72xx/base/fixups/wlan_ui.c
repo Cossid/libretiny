@@ -122,7 +122,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
      */
     if (bk_wlan_key_is_psk(key_buffer)) {
         memset(&config, 0, sizeof(config));
-        config.u.key_mgmt = WPA_KEY_MGMT_PSK | WPA_KEY_MGMT_PSK_SHA256;
+        config.u.key_mgmt = WPA_KEY_MGMT_PSK;
         config.field = WLAN_STA_FIELD_KEY_MGMT;
         wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
     }
