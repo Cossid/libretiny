@@ -129,6 +129,26 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     /* the network is configured now, so the PSK can be applied to it */
     bk_wlan_request_psk(key_buffer);
 
+    /* TEMPORARY DIAGNOSTIC: dump what the supplicant actually holds. */
+    {
+        extern struct wpa_supplicant *wpa_suppliant_ctrl_get_wpas(void);
+        extern void __wrap_bk_printf_enable();
+        extern void __wrap_bk_printf_disable();
+        struct wpa_supplicant *wpa_s = wpa_suppliant_ctrl_get_wpas();
+        struct wpa_ssid *s = wpa_s ? wpa_config_get_network(wpa_s->conf, 0) : NULL;
+
+        __wrap_bk_printf_enable();
+        if (s) {
+            bk_printf("PSKDBG: psk_set=%d key_mgmt=0x%x pass_len=%d ssid_len=%d psk=%02x%02x%02x%02x..%02x%02x\r\n",
+                      s->psk_set, s->key_mgmt, s->passphrase ? (int)strlen(s->passphrase) : -1,
+                      (int)s->ssid_len, s->psk[0], s->psk[1], s->psk[2], s->psk[3], s->psk[30], s->psk[31]);
+        } else {
+            bk_printf("PSKDBG: no network (wpa_s=%p)\r\n", wpa_s);
+        }
+        bk_printf("PSKDBG: key=%.4s..%.4s len=%d\r\n", key_buffer, key_buffer + 60, (int)strlen(key_buffer));
+        __wrap_bk_printf_disable();
+    }
+
     /* set fast connect bssid */
     memset(&config, 0, sizeof(config));
     /*
