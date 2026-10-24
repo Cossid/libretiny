@@ -8,6 +8,59 @@ extern void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAd
 
 extern void bk_wlan_sta_adv_param_2_sta(network_InitTypeDef_adv_st *sta_adv,network_InitTypeDef_st* sta);
 
+/* Decode a single hex digit; returns -1 if `c` is not a hex digit. */
+static int hex_nibble(char c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    return -1;
+}
+
+/* Decode 64 hex characters into a 32-byte PSK; returns false if invalid. */
+static bool hex_to_psk(const char *hex, uint8_t *psk)
+{
+    for (int i = 0; i < 32; i++) {
+        int hi = hex_nibble(hex[2 * i]);
+        int lo = hex_nibble(hex[2 * i + 1]);
+        if (hi < 0 || lo < 0)
+            return false;
+        psk[i] = (hi << 4) | lo;
+    }
+    return true;
+}
+
+/*
+ * Request the PSK for the station, copying the key to a null-terminated buffer
+ * as `key_len` is authoritative. A 64-character hex key is a pre-computed PSK,
+ * so it is decoded and passed directly instead of being derived as a passphrase.
+ */
+static void bk_wlan_request_psk(void)
+{
+    char key_buffer[PMK_LEN_MAX + 1];
+    uint8_t psk[PMK_LEN];
+    size_t key_len = g_sta_param_ptr->key_len;
+
+    if (key_len > PMK_LEN_MAX)
+        key_len = PMK_LEN_MAX;
+
+    /* Make copy with a guaranteed null terminator. */
+    memcpy(key_buffer, g_sta_param_ptr->key, key_len);
+    key_buffer[key_len] = 0;
+
+    if (key_len == PMK_LEN * 2 && hex_to_psk(key_buffer, psk)) {
+        wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
+                        key_buffer, psk, PMK_LEN);
+    } else {
+        /* let wpa_psk_cal thread to calculate psk. */
+        wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
+                        key_buffer, NULL, 0);
+    }
+}
+
 OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
 {
     if (bk_wlan_is_monitor_mode()) {
@@ -40,28 +93,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 
     bk_wlan_sta_init_adv(inNetworkInitParaAdv);
 
-    /*
-     * Key buffer is not guaranteed to be null terminated: there is a separate
-     * `key_len` field that stores the length. We have to copy the data to a
-     * temporary stack buffer. Fortunately, `wpa_psk_request()` does not keep
-     * the reference, as it's not needed: the end result is PSK that is either
-     * derived from the `ssid` + `key` or is already available. `key` is just a
-     * transient argument.
-     */
-    {
-        char key_buffer[PMK_LEN_MAX + 1];
-
-        /* Make copy with a guaranteed null terminator. */
-        memcpy(key_buffer, g_sta_param_ptr->key, g_sta_param_ptr->key_len);
-        key_buffer[g_sta_param_ptr->key_len] = '\0';
-
-        /*
-         * let wpa_psk_cal thread to calculate psk.
-         * XXX: If you know psk value, fill last two parameters of `wpa_psk_request()'.
-         */
-        wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
-                        key_buffer, NULL, 0);
-    }
+    bk_wlan_request_psk();
 
     supplicant_main_entry(inNetworkInitParaAdv->ap_info.ssid);
 
@@ -79,28 +111,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 #endif
     bk_wlan_sta_init_adv(inNetworkInitParaAdv);
 
-    /*
-     * Key buffer is not guaranteed to be null terminated: there is a separate
-     * `key_len` field that stores the length. We have to copy the data to a
-     * temporary stack buffer. Fortunately, `wpa_psk_request()` does not keep
-     * the reference, as it's not needed: the end result is PSK that is either
-     * derived from the `ssid` + `key` or is already available. `key` is just a
-     * transient argument.
-     */
-    {
-        char key_buffer[PMK_LEN_MAX + 1];
-
-        /* Make copy with a guaranteed null terminator. */
-        memcpy(key_buffer, g_sta_param_ptr->key, g_sta_param_ptr->key_len);
-        key_buffer[g_sta_param_ptr->key_len] = '\0';
-
-        /*
-         * let wpa_psk_cal thread to calculate psk.
-         * XXX: If you know psk value, fill last two parameters of `wpa_psk_request()'.
-         */
-        wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
-                        key_buffer, NULL, 0);
-    }
+    bk_wlan_request_psk();
 
     /* disconnect previous connected network */
     wlan_sta_disconnect();
