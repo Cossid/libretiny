@@ -8,6 +8,15 @@ void lt_get_device_mac(uint8_t *mac) {
 }
 
 void lt_reboot() {
+#if CFG_BDK_VERSION >= 30076 && CFG_WPA_CTRL_IFACE
+	// Leave the AP cleanly, as it rejects a quick reconnect while it still
+	// holds the old PMF session.
+	LinkStatusTypeDef link;
+	if (bk_wlan_get_link_status(&link) == kNoErr) {
+		wlan_sta_disconnect();
+		rtos_delay_milliseconds(50);
+	}
+#endif
 	bk_reboot();
 }
 
