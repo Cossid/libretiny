@@ -24,28 +24,31 @@ static void bk_wlan_copy_key(char key_buffer[PMK_LEN_MAX + 1])
     key_buffer[key_len] = 0;
 }
 
-/* Whether the key is a 64-character hex PSK rather than a passphrase. */
-static bool bk_wlan_key_is_psk(const char *key_buffer)
+/* Decode a 64-character hex PSK into 32 bytes; false if not a hex PSK. */
+static bool bk_wlan_key_to_psk(const char *key_buffer, uint8_t psk[PMK_LEN])
 {
     if (strlen(key_buffer) != PMK_LEN * 2)
         return false;
-    for (int i = 0; i < PMK_LEN * 2; i++) {
-        if (!isxdigit((unsigned char)key_buffer[i]))
+    for (int i = 0; i < PMK_LEN; i++) {
+        if (!isxdigit((unsigned char)key_buffer[2 * i]) ||
+            !isxdigit((unsigned char)key_buffer[2 * i + 1]))
             return false;
+        char byte[3] = {key_buffer[2 * i], key_buffer[2 * i + 1], 0};
+        psk[i] = (uint8_t)strtoul(byte, NULL, 16);
     }
     return true;
 }
 
 /*
- * Request the PSK for the station. A hex PSK is available immediately and is
+ * Request the PSK for the station. A known PSK is available immediately and is
  * delivered to the supplicant synchronously, so the network must already be
  * configured when this is called; otherwise the PSK is dropped.
  */
-static void bk_wlan_request_psk(const char *key_buffer)
+static void bk_wlan_request_psk(const char *key_buffer, uint8_t *psk, size_t psk_len)
 {
-    /* let wpa_psk_cal thread to calculate psk. */
+    /* without a PSK, let wpa_psk_cal thread to calculate it */
     wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
-                    key_buffer, NULL, 0);
+                    (char *)key_buffer, psk, psk_len);
 }
 
 OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitParaAdv)
@@ -83,7 +86,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     {
         char key_buffer[PMK_LEN_MAX + 1];
         bk_wlan_copy_key(key_buffer);
-        bk_wlan_request_psk(key_buffer);
+        bk_wlan_request_psk(key_buffer, NULL, 0);
     }
 
     supplicant_main_entry(inNetworkInitParaAdv->ap_info.ssid);
@@ -94,6 +97,8 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 #else /* CFG_WPA_CTRL_IFACE */
     wlan_sta_config_t config;
     char key_buffer[PMK_LEN_MAX + 1];
+    uint8_t psk[PMK_LEN];
+    bool is_psk;
 
 #if (CFG_SOC_NAME == SOC_BK7231N)
     if (get_ate_mode_state()) {
@@ -104,6 +109,15 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     bk_wlan_sta_init_adv(inNetworkInitParaAdv);
 
     bk_wlan_copy_key(key_buffer);
+
+    /*
+     * A hex PSK is handed over as a PSK instead of being used as the network's
+     * passphrase. The supplicant still needs some passphrase to match the PSK
+     * against, so a valid-length (63 character) placeholder is used for it.
+     */
+    is_psk = bk_wlan_key_to_psk(key_buffer, psk);
+    if (is_psk)
+        key_buffer[PMK_LEN_MAX - 1] = 0;
 
     /* disconnect previous connected network */
     wlan_sta_disconnect();
@@ -120,8 +134,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
      * passphrase. A PSK cannot be used for that, so on a WPA2/WPA3 network SAE
      * would be chosen and fail authentication. Restrict to WPA2-PSK instead.
      */
-    /* TEMPORARY EXPERIMENT: force WPA2-PSK for passphrases too. */
-    if (bk_wlan_key_is_psk(key_buffer) || 1) {
+    if (is_psk) {
         memset(&config, 0, sizeof(config));
         config.u.key_mgmt = WPA_KEY_MGMT_PSK;
         config.field = WLAN_STA_FIELD_KEY_MGMT;
@@ -129,7 +142,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     }
 
     /* the network is configured now, so the PSK can be applied to it */
-    bk_wlan_request_psk(key_buffer);
+    bk_wlan_request_psk(key_buffer, is_psk ? psk : NULL, is_psk ? PMK_LEN : 0);
 
     /* TEMPORARY DIAGNOSTIC: dump what the supplicant actually holds. */
     {
