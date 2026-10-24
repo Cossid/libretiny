@@ -47,14 +47,17 @@ extern int __real_wpa_config_set_wpa(struct wpa_bss *bss, struct wpa_ssid *ssid,
 /*
  * The SDK forces PMF to optional on every scan result match, so an AP holding a
  * PMF session from before a restart rejects a reconnect for several seconds.
- * Reset it afterwards when PMF is disabled; older SDKs compile PMF out entirely.
+ * Reset it afterwards when PMF is disabled, along with the key management modes
+ * that need it, as older SDKs compile PMF out entirely.
  */
 int __wrap_wpa_config_set_wpa(struct wpa_bss *bss, struct wpa_ssid *ssid, struct wpa_ie_data *ie)
 {
     int ret = __real_wpa_config_set_wpa(bss, ssid, ie);
 
-    if (bk_wlan_pmf_disabled)
+    if (bk_wlan_pmf_disabled) {
         ssid->ieee80211w = NO_MGMT_FRAME_PROTECTION;
+        ssid->key_mgmt &= ~(WPA_KEY_MGMT_PSK_SHA256 | WPA_KEY_MGMT_SAE | WPA_KEY_MGMT_OWE);
+    }
     return ret;
 }
 #endif
