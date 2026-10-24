@@ -9,8 +9,8 @@ extern void bk_wlan_sta_init_adv(network_InitTypeDef_adv_st *inNetworkInitParaAd
 extern void bk_wlan_sta_adv_param_2_sta(network_InitTypeDef_adv_st *sta_adv,network_InitTypeDef_st* sta);
 
 /*
- * Copy the key to a null-terminated buffer, as `key_len` is authoritative and a
- * 64-character key (a hex PSK) fills the whole `key` array with no terminator.
+ * Copy the key to a null-terminated buffer, as `key_len` is authoritative. A
+ * 64-character hex PSK fills the whole `key` array with no terminator.
  */
 static void bk_wlan_copy_key(char key_buffer[PMK_LEN_MAX + 1])
 {
@@ -39,9 +39,9 @@ static bool bk_wlan_key_to_psk(const char *key_buffer, uint8_t psk[PMK_LEN])
 }
 
 /*
- * Allow or forbid the supplicant from selecting SAE (WPA3). This is done by
- * toggling the driver's SAE capability flag, which is set when the supplicant is
- * created, so it must be called after the supplicant is enabled.
+ * Allow or forbid the supplicant from selecting SAE (WPA3) by toggling the
+ * driver's SAE flag. Must be called after the supplicant is enabled, as that
+ * sets the flag.
  */
 static void bk_wlan_set_sae_allowed(bool allowed)
 {
@@ -68,10 +68,9 @@ static void bk_wlan_request_psk(const char *key_buffer)
 }
 
 /*
- * Apply a known PSK to the configured network. This is done directly instead of
- * through `wpa_psk_request()`, which caches the last PSK and does nothing when
- * asked for the same one again, leaving a recreated network without a PSK. The
- * network must already be configured, as the PSK is matched against it.
+ * Apply a known PSK to the configured network. This bypasses `wpa_psk_request()`,
+ * which does nothing for an already cached PSK and would leave a recreated
+ * network without one.
  */
 static void bk_wlan_apply_psk(const char *passphrase, const uint8_t psk[PMK_LEN])
 {
@@ -145,9 +144,9 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     bk_wlan_copy_key(key_buffer);
 
     /*
-     * A hex PSK is handed over as a PSK instead of being used as the network's
-     * passphrase. The supplicant still needs some passphrase to match the PSK
-     * against, so a valid-length (63 character) placeholder is used for it.
+     * A hex PSK is applied as a PSK rather than used as the passphrase. The
+     * supplicant still needs a passphrase to match it against, so a 63-character
+     * placeholder is used.
      */
     is_psk = bk_wlan_key_to_psk(key_buffer, psk);
     if (is_psk)
@@ -164,13 +163,22 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
                  (uint8_t*)key_buffer);
 
     /*
-     * The SDK re-enables SAE in the network's key management every time it
-     * matches a scan result, and SAE is preferred over WPA2-PSK. SAE derives its
-     * key from the passphrase, which a PSK cannot provide, so on a WPA2/WPA3
-     * network it would be chosen and fail authentication. The supplicant only
-     * selects SAE when the driver reports support for it, so hide that.
+     * SAE is preferred on WPA2/WPA3 networks but needs the real passphrase, which
+     * a PSK cannot provide. Hide the driver's SAE support so WPA2-PSK is used.
      */
     bk_wlan_set_sae_allowed(!is_psk);
+
+#if CFG_BDK_VERSION >= 30076
+    /*
+     * Older SDKs compile out PMF, while this one negotiates it, so an AP holding a
+     * PMF session from before a restart rejects the new association for several
+     * seconds. Turn PMF off for PSK, which doesn't need it; WPA3 keeps the default.
+     */
+    memset(&config, 0, sizeof(config));
+    config.u.ieee80211w = is_psk ? 0 : MGMT_FRAME_PROTECTION_DEFAULT;
+    config.field = WLAN_STA_FIELD_MFP;
+    wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
+#endif
 
     /* set fast connect bssid */
     memset(&config, 0, sizeof(config));
@@ -196,10 +204,8 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
 
     /*
-     * The network is fully configured now, so the PSK can be applied to it.
-     * Applying a PSK makes the supplicant start connecting right away, so this
-     * is done after the BSSID and channel are set to avoid connecting twice with
-     * a partial configuration.
+     * Apply the PSK only once the network is fully configured, as it is matched
+     * against it and makes the supplicant start connecting right away.
      */
     if (is_psk)
         bk_wlan_apply_psk(key_buffer, psk);
