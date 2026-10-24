@@ -10,10 +10,9 @@ extern void bk_wlan_sta_adv_param_2_sta(network_InitTypeDef_adv_st *sta_adv,netw
 
 /*
  * Copy the key to a null-terminated buffer, as `key_len` is authoritative and a
- * 64-character key (a hex PSK) fills the whole `key` array with no terminator,
- * then request the PSK for the station.
+ * 64-character key (a hex PSK) fills the whole `key` array with no terminator.
  */
-static void bk_wlan_request_psk(char key_buffer[PMK_LEN_MAX + 1])
+static void bk_wlan_copy_key(char key_buffer[PMK_LEN_MAX + 1])
 {
     size_t key_len = g_sta_param_ptr->key_len;
 
@@ -22,7 +21,15 @@ static void bk_wlan_request_psk(char key_buffer[PMK_LEN_MAX + 1])
 
     memcpy(key_buffer, g_sta_param_ptr->key, key_len);
     key_buffer[key_len] = 0;
+}
 
+/*
+ * Request the PSK for the station. A hex PSK is available immediately and is
+ * delivered to the supplicant synchronously, so the network must already be
+ * configured when this is called; otherwise the PSK is dropped.
+ */
+static void bk_wlan_request_psk(const char *key_buffer)
+{
     /* let wpa_psk_cal thread to calculate psk. */
     wpa_psk_request(g_sta_param_ptr->ssid.array, g_sta_param_ptr->ssid.length,
                     key_buffer, NULL, 0);
@@ -62,6 +69,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 
     {
         char key_buffer[PMK_LEN_MAX + 1];
+        bk_wlan_copy_key(key_buffer);
         bk_wlan_request_psk(key_buffer);
     }
 
@@ -82,7 +90,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 #endif
     bk_wlan_sta_init_adv(inNetworkInitParaAdv);
 
-    bk_wlan_request_psk(key_buffer);
+    bk_wlan_copy_key(key_buffer);
 
     /* disconnect previous connected network */
     wlan_sta_disconnect();
@@ -93,6 +101,9 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
     /* set network parameters: ssid, passphase */
     wlan_sta_set((uint8_t*)inNetworkInitParaAdv->ap_info.ssid, strlen(inNetworkInitParaAdv->ap_info.ssid),
                  (uint8_t*)key_buffer);
+
+    /* the network is configured now, so the PSK can be applied to it */
+    bk_wlan_request_psk(key_buffer);
 
     /* set fast connect bssid */
     memset(&config, 0, sizeof(config));
