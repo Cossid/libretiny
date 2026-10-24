@@ -120,7 +120,8 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
      * passphrase. A PSK cannot be used for that, so on a WPA2/WPA3 network SAE
      * would be chosen and fail authentication. Restrict to WPA2-PSK instead.
      */
-    if (bk_wlan_key_is_psk(key_buffer)) {
+    /* TEMPORARY EXPERIMENT: force WPA2-PSK for passphrases too. */
+    if (bk_wlan_key_is_psk(key_buffer) || 1) {
         memset(&config, 0, sizeof(config));
         config.u.key_mgmt = WPA_KEY_MGMT_PSK;
         config.field = WLAN_STA_FIELD_KEY_MGMT;
