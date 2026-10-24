@@ -39,6 +39,28 @@ static bool bk_wlan_key_to_psk(const char *key_buffer, uint8_t psk[PMK_LEN])
     return true;
 }
 
+/*
+ * Allow or forbid the supplicant from selecting SAE (WPA3). This is done by
+ * toggling the driver's SAE capability flag, which is set when the supplicant is
+ * created, so it must be called after the supplicant is enabled.
+ */
+static void bk_wlan_set_sae_allowed(bool allowed)
+{
+    extern struct wpa_supplicant *wpa_suppliant_ctrl_get_wpas(void);
+    static bool sae_hidden = false;
+    struct wpa_supplicant *wpa_s = wpa_suppliant_ctrl_get_wpas();
+
+    if (!wpa_s)
+        return;
+    if (!allowed && (wpa_s->drv_flags & WPA_DRIVER_FLAGS_SAE)) {
+        wpa_s->drv_flags &= ~(u64)WPA_DRIVER_FLAGS_SAE;
+        sae_hidden = true;
+    } else if (allowed && sae_hidden) {
+        wpa_s->drv_flags |= WPA_DRIVER_FLAGS_SAE;
+        sae_hidden = false;
+    }
+}
+
 /* let wpa_psk_cal thread to calculate the PSK from the passphrase */
 static void bk_wlan_request_psk(const char *key_buffer)
 {
@@ -144,17 +166,12 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 
     /*
      * The SDK re-enables SAE in the network's key management every time it
-     * matches a scan result, so that cannot be restricted here. SAE derives its
+     * matches a scan result, and SAE is preferred over WPA2-PSK. SAE derives its
      * key from the passphrase, which a PSK cannot provide, so on a WPA2/WPA3
-     * network it would be chosen and fail. SAE requires PMF, so disable PMF
-     * to leave WPA2-PSK as the only option.
+     * network it would be chosen and fail authentication. The supplicant only
+     * selects SAE when the driver reports support for it, so hide that.
      */
-    if (is_psk) {
-        memset(&config, 0, sizeof(config));
-        config.u.ieee80211w = 0;
-        config.field = WLAN_STA_FIELD_MFP;
-        wpa_ctrl_request(WPA_CTRL_CMD_STA_SET, &config);
-    }
+    bk_wlan_set_sae_allowed(!is_psk);
 
     /* the network is configured now, so the PSK can be applied to it */
     if (is_psk)
