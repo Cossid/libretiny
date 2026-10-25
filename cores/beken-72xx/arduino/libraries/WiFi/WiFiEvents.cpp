@@ -9,20 +9,35 @@ static xTaskHandle wifiEventTaskHandle	 = NULL;
 
 static const rw_evt_type eventConnected = RW_EVT_STA_CONNECTED;
 
-// callback for bk_wlan_status_register_cb()
-static void wifiStatusCallback(rw_evt_type *pEvent) {
+typedef struct {
+	rw_evt_type event;
+	uint16_t reason; // 802.11 reason/status code, if provided by BDK
+} WiFiQueuedEvent;
+
+static void wifiQueueEvent(rw_evt_type event, uint16_t reason) {
 	if (wifiEventQueueHandle && wifiEventTaskHandle) {
-		xQueueSend(wifiEventQueueHandle, pEvent, portMAX_DELAY);
+		WiFiQueuedEvent item = {event, reason};
+		xQueueSend(wifiEventQueueHandle, &item, portMAX_DELAY);
 	} else {
-		wifiEventHandler(*pEvent);
+		wifiEventHandler(event, reason);
 	}
 }
 
+// callback for bk_wlan_status_register_cb()
+static void wifiStatusCallback(rw_evt_type *pEvent) {
+	uint16_t reason = 0;
+#if CFG_BDK_VERSION >= 30076
+	// BDK passes a wlan_status_t, which starts with the event type.
+	reason = ((wlan_status_t *)pEvent)->reason_code;
+#endif
+	wifiQueueEvent(*pEvent, reason);
+}
+
 static void wifiEventTask(void *arg) {
-	rw_evt_type event = RW_EVT_MAX;
+	WiFiQueuedEvent item = {RW_EVT_MAX, 0};
 	for (;;) {
-		if (xQueueReceive(wifiEventQueueHandle, &event, portMAX_DELAY) == pdTRUE) {
-			wifiEventHandler(event);
+		if (xQueueReceive(wifiEventQueueHandle, &item, portMAX_DELAY) == pdTRUE) {
+			wifiEventHandler(item.event, item.reason);
 		}
 	}
 }
@@ -62,14 +77,13 @@ static String waitForValidSSID(WiFiClass *pWiFi) {
 }
 
 void wifiEventSendArduino(EventId event) {
-	event = (EventId)(RW_EVT_ARDUINO | event);
-	wifiStatusCallback((rw_evt_type *)&event);
+	wifiQueueEvent((rw_evt_type)(RW_EVT_ARDUINO | event), 0);
 }
 
 void startWifiTask() {
 	if (!wifiEventQueueHandle) {
 		LT_HEAP_I();
-		wifiEventQueueHandle = xQueueCreate(32, sizeof(rw_evt_type));
+		wifiEventQueueHandle = xQueueCreate(32, sizeof(WiFiQueuedEvent));
 		LT_HEAP_I();
 	}
 	if (!wifiEventTaskHandle) {
@@ -80,11 +94,11 @@ void startWifiTask() {
 	bk_wlan_status_register_cb((FUNC_1PARAM_PTR)wifiStatusCallback);
 }
 
-void wifiEventHandler(rw_evt_type event) {
+void wifiEventHandler(rw_evt_type event, uint16_t reasonCode) {
 	if (!pWiFi)
 		return; // failsafe
 
-	LT_DM(WIFI, "BK event %u", event);
+	LT_DM(WIFI, "BK event %u (reason code %u)", event, reasonCode);
 
 	EventId eventId;
 	EventInfo eventInfo;
