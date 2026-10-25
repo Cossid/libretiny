@@ -100,11 +100,6 @@ void wifiEventHandler(rw_evt_type event) {
 			break;
 
 		case RW_EVT_STA_CONNECTING:
-#if CFG_BDK_VERSION >= 30076
-		// Fired by BDK on a disconnect requested by us, during the connection stage only.
-		// Listeners already know about it; reporting it would look like a connection failure.
-		case RW_EVT_STA_ACTIVE_DISCONNECTED:
-#endif
 			stateOnly = true;
 			break;
 
@@ -117,6 +112,10 @@ void wifiEventHandler(rw_evt_type event) {
 		case RW_EVT_STA_AUTH_FAILED:
 		case RW_EVT_STA_DISASSOC:
 		case RW_EVT_STA_ASSOC_FAILED:
+		// The BDK aborted a connection attempt on its own (during auth/assoc/handshake)
+		// and retries internally after a long delay. Report it, so the upper layer
+		// doesn't have to wait for its own connection timeout.
+		case RW_EVT_STA_ACTIVE_DISCONNECTED:
 #else
 		case RW_EVT_STA_DISCONNECTED:
 		case RW_EVT_STA_CONNECT_FAILED:
@@ -157,6 +156,9 @@ void wifiEventHandler(rw_evt_type event) {
 					break;
 				case RW_EVT_STA_ASSOC_FAILED:
 					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_CONNECTION_FAIL;
+					break;
+				case RW_EVT_STA_ACTIVE_DISCONNECTED:
+					eventInfo.wifi_sta_disconnected.reason = WIFI_REASON_ASSOC_FAIL;
 					break;
 #else
 				case RW_EVT_STA_DISCONNECTED:
