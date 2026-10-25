@@ -134,7 +134,7 @@ void wifiEventHandler(rw_evt_type event, uint16_t reasonCode) {
 		case RW_EVT_STA_DISCONNECTED:
 		case RW_EVT_STA_CONNECT_FAILED:
 #endif
-			eventId									 = ARDUINO_EVENT_WIFI_STA_DISCONNECTED;
+			eventId = ARDUINO_EVENT_WIFI_STA_DISCONNECTED;
 			// BDK doesn't report which AP failed; use the configured target, so that
 			// listeners don't mistake the event for a spurious one (empty SSID).
 			eventInfo.wifi_sta_disconnected.ssid_len =
