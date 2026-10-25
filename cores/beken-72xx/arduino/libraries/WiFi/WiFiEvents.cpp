@@ -89,12 +89,23 @@ void wifiEventHandler(rw_evt_type event) {
 	EventId eventId;
 	EventInfo eventInfo;
 	String ssid;
+	// Events which only update the state and have no Arduino counterpart.
+	bool stateOnly = false;
 
 	memset(&eventInfo, 0, sizeof(EventInfo));
 
 	switch (event) {
 		case RW_EVT_STA_IDLE:
 			eventId = ARDUINO_EVENT_WIFI_READY;
+			break;
+
+		case RW_EVT_STA_CONNECTING:
+#if CFG_BDK_VERSION >= 30076
+		// Fired by BDK on a disconnect requested by us, during the connection stage only.
+		// Listeners already know about it; reporting it would look like a connection failure.
+		case RW_EVT_STA_ACTIVE_DISCONNECTED:
+#endif
+			stateOnly = true;
 			break;
 
 		case RW_EVT_STA_BEACON_LOSE:
@@ -189,6 +200,17 @@ void wifiEventHandler(rw_evt_type event) {
 			// TODO station MAC
 			break;
 
+		case RW_EVT_AP_CONNECT_FAILED:
+			stateOnly = true;
+			break;
+
+#if CFG_BDK_VERSION >= 30076
+		case RW_EVT_AP_GOT_IP:
+			eventId = ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED;
+			// TODO station IP
+			break;
+#endif
+
 		case RW_EVT_ARDUINO | ARDUINO_EVENT_WIFI_SCAN_DONE:
 			eventId							= ARDUINO_EVENT_WIFI_SCAN_DONE;
 			eventInfo.wifi_scan_done.status = 0;
@@ -212,5 +234,6 @@ void wifiEventHandler(rw_evt_type event) {
 		pDATA->lastApEvent = event;
 	}
 
-	pWiFi->postEvent(eventId, eventInfo);
+	if (!stateOnly)
+		pWiFi->postEvent(eventId, eventInfo);
 }
