@@ -193,7 +193,7 @@ OSStatus bk_wlan_start_sta_adv_fix(network_InitTypeDef_adv_st *inNetworkInitPara
 
 #if CFG_BDK_VERSION >= 30076
     /* Turn PMF off for PSK (see `__wrap_wpa_config_set_wpa()`); WPA3 keeps it. */
-    bk_wlan_pmf_disabled = is_psk;
+    bk_wlan_pmf_disabled = false; /* TEMPORARY TEST: was `is_psk`, wrapper disabled */
 #endif
 
     /* set fast connect bssid */
